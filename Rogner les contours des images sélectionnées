@@ -1,0 +1,34 @@
+#!/usr/bin/bash
+
+# Placer le script dans ~/.local/share/nautilus/scripts/ (pour GNOME) ou ~/.local/share/nemo/scripts/ (pour Cinnamon)
+# Ne pas oublier de le rendre exécutable !
+
+if [[ ! $(which convert) ]] ; then
+  cat > "Installer convert.txt" << EOF
+convert se trouve la plupart du temps dans le paquet "imagemagick" ou "ImageMagick".
+L’installer pour Ubuntu, Linux Mint, Debian et derivés :
+sudo apt install imagemagick
+L’installer pour Fedora, CentOS, RHEL et dérivés :
+sudo dnf install ImageMagick
+EOF
+  notify-send 'Rogner les contours des images sélectionnées' 'Erreur : la commande "convert" n’est pas installée. Les instructions d’installation sont consultables dans le fichier "Installer convert".'
+  exit 1
+fi
+
+case $(printf "${XDG_SESSION_DESKTOP}") in
+  gnome|ubuntu) readarray -t selection <<< $(echo "${NAUTILUS_SCRIPT_SELECTED_FILE_PATHS}" | sed 's/^$//g') ;;
+  cinnamon) readarray -t selection <<< $(echo "${NEMO_SCRIPT_SELECTED_FILE_PATHS}" | sed 's/^$//g') ;;
+esac
+
+for image in "${selection[@]}" ; do
+  convert "${image}" -trim "$(basename ${image})_rognée.jpg" 2>> rogner_images.log
+done
+
+if [[ "${?}" -ne 0 ]] ; then
+  echo "$(date '+%FT%T')" >> rogner_images.log
+  echo >> rogner_images.log
+  notify-send 'Rogner les contours des images sélectionnées' 'Une ou plusieurs erreurs ont été rencontrées. Voir le fichier rogner_images.log pour les détails.'
+else
+  if [[ -z $(cat rogner_images.log) ]] ; then rm rogner_images.log ; fi
+  notify-send --hint=int:transient:1 'Rogner les images sélectionnées' 'Terminé avec succès.'
+fi
