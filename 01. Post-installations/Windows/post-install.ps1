@@ -20,4 +20,6 @@ winget install 7zip.7zip
 reg import .\favourites.reg
 reg import .\show_file_extensions.reg
 
+# Set default browser
+
 #Set-ExecutionPolicy Restricted
