@@ -1,0 +1,5 @@
+sudo mintupdate-cli -ry upgrade && sudo mintupdate-cli -ry upgrade && sudo apt autoremove -y && gsettings set org.cinnamon.desktop.session idle-delay 0
+
+sudo sed -i s,http://packages.linuxmint.com,https://mirror.cyberbits.eu/linuxmint/packages,g /etc/apt/sources.list.d/official-package-repositories.list ; sudo sed -i s,http://archive.ubuntu.com/ubuntu,https://fr.archive.ubuntu.com/ubuntu,g /etc/apt/sources.list.d/official-package-repositories.list ; sudo mintupdate-cli -ry upgrade && sudo mintupdate-cli -ry upgrade && sudo apt install -y celluloid gnote drawing neofetch && sudo apt purge -y xplayer tomboy && sudo apt autoremove -y && gsettings set org.cinnamon.desktop.session idle-delay 900
+
+Activer XApp

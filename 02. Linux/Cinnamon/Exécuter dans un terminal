@@ -1,0 +1,5 @@
+#!/usr/bin/bash
+
+# Placer ce script dans ~/.local/share/nemo/scripts
+
+gnome-terminal --hide-menubar --title=$(basename ${NEMO_SCRIPT_SELECTED_FILE_PATHS}) -- /usr/bin/bash -c "${NEMO_SCRIPT_SELECTED_FILE_PATHS}"
