@@ -1,0 +1,18 @@
+#!/usr/bin/bash
+
+case $(printf "${XDG_SESSION_DESKTOP}") in
+  gnome|ubuntu) readarray -t selection <<< $(echo "${NAUTILUS_SCRIPT_SELECTED_FILE_PATHS}" | sed 's/^$//g') ;;
+  cinnamon) readarray -t selection <<< $(echo "${NEMO_SCRIPT_SELECTED_FILE_PATHS}" | sed 's/^$//g') ;;
+esac
+
+feh \
+  --image-bg black \
+  --zoom max \
+  --scale-down \
+  --randomize \
+  --recursive \
+  --slideshow-delay 4 \
+  --geometry 480x640 \
+  --fontpath /home/silejonu/.config/feh \
+  --font NanumBarunGothic/12 \
+  "${selection[@]}"
