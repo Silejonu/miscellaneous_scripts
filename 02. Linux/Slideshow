@@ -6,13 +6,13 @@ case $(printf "${XDG_SESSION_DESKTOP}") in
 esac
 
 feh \
---fullscreen \
---autozoom \
---hide-pointer \
---draw-filename \
---randomize \
---recursive \
---slideshow-delay 4 \
---fontpath ${HOME}/.config/feh \
---font NanumBarunGothic/12 \
-"${selection[@]}"
+  --fullscreen \
+  --zoom max \
+  --hide-pointer \
+  --draw-filename \
+  --randomize \
+  --recursive \
+  --slideshow-delay 4 \
+  --fontpath ${HOME}/.config/feh \
+  --font NanumBarunGothic/12 \
+  "${selection[@]}"
