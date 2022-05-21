@@ -18,7 +18,7 @@ case $(printf "${XDG_SESSION_DESKTOP}") in
 esac
 
 for fichier in "${selection[@]}" ; do
-    jpegoptim -p "${fichier}" || \
+    jpegoptim --preserve "${fichier}" || \
     optipng "${fichier}"   
 done
 
