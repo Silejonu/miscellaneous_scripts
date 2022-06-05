@@ -3,7 +3,7 @@
 # Placer le script dans ~/.local/share/nautilus/scripts/ (pour GNOME) ou ~/.local/share/nemo/scripts/ (pour Cinnamon)
 # Ne pas oublier de le rendre exécutable !
 
-if [[ ! $(which ghostscript) ]] ; then
+if [[ ! $(which gs) ]] ; then
   notify-send 'Compresser et aplatir les PDFs' 'Erreur : la commande "ghostscript" n’est pas installée.'
   exit 1
 fi
