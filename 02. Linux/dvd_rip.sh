@@ -26,3 +26,8 @@ eject /dev/sr0
 sub_title=$(grep '\--sid' "${repertoire_encodage}/meta.txt" | cut -d'=' -f2 | cut -d' ' -f1)
 # Récupérer les langues des pistes de sous-titres
 sub_lang=$(grep '\--sid' "${repertoire_encodage}meta.txt" | cut -d'=' -f3 | cut -d' ' -f1)
+
+(
+cd "${repertoire_encodage}"
+mencoder "${repertoire_encodage}/${titre_du_film}.vob" -vobsuboutindex 0 -o /dev/null -nosound -ovc frameno -vobsubout ${sub_lang} -sid ${sub_title}
+)
