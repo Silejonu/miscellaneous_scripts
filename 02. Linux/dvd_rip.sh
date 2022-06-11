@@ -1,8 +1,7 @@
 #!/usr/bin/bash
 
 read -rp 'Titre du film ? ' titre_du_film
-repertoire_encodage="$HOME/Videos/rips/${titre_du_film}"
-
+repertoire_encodage="$(xdg-user-dir VIDEOS)/rips/${titre_du_film}"
 
 mkdir -p "${repertoire_encodage}"
 
