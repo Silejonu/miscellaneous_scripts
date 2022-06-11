@@ -17,7 +17,7 @@ numero_piste=$(grep '\[dvdnav\] Selecting title' "${repertoire_encodage}/meta.tx
 mpv dvd://longest --stream-dump="${repertoire_encodage}/${titre_du_film}.vob"
 
 # Récupérer le chapitrage
-dvdxchap -t ${numero_piste} /dev/sr0 > "${repertoire_encodage}/chapitres.txt"
+dvdxchap -t $(( $numero_piste + 1 )) /dev/sr0 > "${repertoire_encodage}/chapitres.txt"
 
 # Éjecter le DVD
 eject /dev/sr0
