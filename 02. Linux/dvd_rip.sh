@@ -23,8 +23,10 @@ dvdxchap --title $(( $numero_piste + 1 )) /dev/sr0 > "${repertoire_encodage}/cha
 eject /dev/sr0
 
 # Récupérer les numéros de pistes des sous-titres
+declare -a sub_title
 sub_title=$(grep '\--sid' "${repertoire_encodage}/meta.txt" | cut -d'=' -f2 | cut -d' ' -f1)
 # Récupérer les langues des pistes de sous-titres
+declare -a sub_lang
 sub_lang=$(grep '\--sid' "${repertoire_encodage}/meta.txt" | cut -d'=' -f3 | cut -d' ' -f1)
 # Encoder les sous-titres au format .idx/.sub
 (
