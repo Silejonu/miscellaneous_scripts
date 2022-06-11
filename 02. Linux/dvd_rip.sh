@@ -11,6 +11,8 @@ cp /run/media/${USER}/*/VIDEO_TS/*.IFO "${repertoire_encodage}"
 mpv dvd://longest > "${repertoire_encodage}/meta.txt" &
 sleep 10
 kill $(pidof mpv)
+# Récupérer le numéro de piste
+numero_piste=$(grep '\[dvdnav\] Selecting title' "${repertoire_encodage}/meta.txt" | cut -d' ' -f4 | tr -d '.')
 # Extraire le fichier .vob
 mpv dvd://longest --stream-dump="${repertoire_encodage}/${titre_du_film}.vob"
 
