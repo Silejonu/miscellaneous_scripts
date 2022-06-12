@@ -32,7 +32,7 @@ sub_lang=$(grep '\--sid' "${repertoire_encodage}/meta.txt" | cut -d'=' -f3 | cut
 (
 cd "${repertoire_encodage}"
 for i in "${!sub_title[@]}"; do
-    mencoder "${repertoire_encodage}/${titre_du_film}.vob" -vobsuboutindex 0 -o /dev/null -nosound -ovc frameno -vobsubout ${sub_lang[i]} -sid ${sub_title[i]}
+    mencoder "${repertoire_encodage}/${titre_du_film}.vob" -vobsuboutindex 0 -o /dev/null -nosound -ovc frameno -vobsubout ${sub_lang[i]} -sid $(( sub_title[i] - 1 ))
 done
 )
 
