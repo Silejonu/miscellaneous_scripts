@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-for cmd in mpv dvdxchap ffmpeg mencoder ; do
+for cmd in mpv dvdxchap ffmpeg ffprobe mencoder awk ; do
   command -v ${cmd} > /dev/null
   if [[ $? -ne 0 ]] ; then
     echo "Command '${cmd}' is missing, please install it and rerun the script."
@@ -11,6 +11,7 @@ done
 read -rp 'Movie title? ' movie_title
 rip_directory="$(xdg-user-dir VIDEOS)/rips/${movie_title}"
 vob_file="${rip_directory}/${movie_title}.vob"
+chapter_file="${rip_directory}/chapters.txt"
 mkdir -p "${rip_directory}"
 
 # Skip if the .vob file already exists
@@ -22,22 +23,16 @@ if [[ -f ${vob_file} ]] ; then
     *) skip_dump='yes';;
   esac
 fi
-if [[ $1 == '--skip-dump' ]] ; then
-  skip_dump='yes'
-else
-  skip_dump='no'
-fi
 
 if [[ $skip_dump == 'no' ]] ; then
   # Extract metadata
   mpv dvd://longest -frames 0 > "${rip_directory}/metadata.txt"
 
   # Dump the movie to a .vob file
-  #mpv dvd://longest --stream-dump="${vob_file}"
+  mpv dvd://longest --stream-dump="${vob_file}"
 
   # Dump chapters
   title_number=$(grep '\[dvdnav\] Selecting title' "${rip_directory}/metadata.txt" | cut -d' ' -f4 | tr -d '.')
-  chapter_file="${rip_directory}/chapters.txt"
   dvdxchap --title $(( $title_number + 1 )) /dev/sr0 > "${chapter_file}"
   # Convert chapters into a format readable by FFmpeg
   for chapter in $(seq -f '%02g' $(cat "${chapter_file}" | sort -r | head -n1 | cut -d' ' -f2)) ; do
@@ -47,7 +42,9 @@ if [[ $skip_dump == 'no' ]] ; then
     sed -i "s#CHAPTER${chapter}=#\n[CHAPTER]\nTIMEBASE=1/1000\nSTART=#" "${chapter_file}"
     sed -i "s#CHAPTER${chapter}NAME#END=\nTITLE#" "${chapter_file}"
   done
-  sed -i "1 s#^#;FFMETADATA1\n#" "${chapter_file}"
+  
+  # Add remaining metadata
+  sed -i "1 s#^#;FFMETADATA1\nTITLE=${movie_title}#" "${chapter_file}"
 
   eject /dev/sr0
 
@@ -78,6 +75,12 @@ grep --color=never -E "\--aid.*\--alang" "${rip_directory}/metadata.txt" | cut -
 #ffprobe "${vob_file}" |& grep Audio | cut -d':' -f4 | cat -n
 read -rp 'Enter the number of the desired audio track: ' aid
 audio_track=$(ffprobe "${vob_file}" |& grep -m${aid} Audio | tail -n1 | cut -d'#' -f2 | cut -d'[' -f1)
+
+# Find the video start delay
+video_start_delay=$(ffprobe -select_streams v:0 -show_streams -i "${vob_file}" |& grep start_time | cut -d'=' -f2)
+# Find the audio start delay
+audio_start_delay=$(ffprobe -select_streams a:${aid} -show_streams -i "${vob_file}" |& grep start_time | cut -d'=' -f2)
+offset=$(awk "BEGIN { print ${video_start_delay} - ${audio_start_delay} }")
 
 # Determine the video cropping
 top_left='0:0'
@@ -133,32 +136,39 @@ while true ; do
 done
 
 # Select the CRF
-read -rp 'Pick the start time (in seconds) of the CRF test. [default 120] ' start_time
-if [[ -z $start_time ]] ; then
-  start_time=120
+read -rp 'Do you want to get a preview of a few CRF values? [Y/n] ' yesno
+case $yesno in
+  [nN]|[nN][oO]) ;;
+  *) crf_test=yes ;;
+esac
+if [[ $crf_test == 'yes' ]] ; then
+  read -rp 'Pick the start time (in seconds) of the CRF test. [default 120] ' start_time
+  if [[ -z $start_time ]] ; then
+    start_time=120
+  fi
+  for test_crf in {15..25} ; do
+    ffmpeg \
+      -y \
+      -threads 0 \
+      -i "${vob_file}" \
+      -map 0:v \
+      -vf crop=${bottom_right}:${top_left} \
+      -vcodec libx264 \
+      ${tune} \
+      ${deinterlace} \
+      -preset ultrafast \
+      -crf ${test_crf} \
+      -ss ${start_time} -t 60 \
+      "${rip_directory}/${movie_title}_crf${test_crf}.mkv"
+  done
+  
+  echo "All CRF test files have been generated in ${rip_directory}"
+  mpv "${rip_directory}/${movie_title}_crf*.mkv"
+
 fi
-for test_crf in {15..25} ; do
-  ffmpeg \
-    -y \
-    -threads 0 \
-    -i "${vob_file}" \
-    -map 0:0 \
-    -vf crop=${bottom_right}:${top_left} \
-    -vcodec libx264 \
-    ${tune} \
-    ${deinterlace} \
-    -preset ultrafast \
-    -map ${audio_track} \
-    -acodec copy \
-    -crf ${test_crf} \
-    -ss ${start_time} -t 60 \
-    "${rip_directory}/${movie_title}_crf${test_crf}.mkv"
-done
 
-echo "All CRF test files have been generated in ${rip_directory}"
-read -rp 'Review them and enter the desired CRF value (the highest number with an acceptable quality) for the final rip: ' crf
+read -rp 'Enter the desired CRF value (the highest number with an acceptable quality) for the final rip: ' crf
 
-# PTS
 # Rappel commande
 
 # Encode the movie
@@ -166,16 +176,18 @@ ffmpeg \
   -threads 0 \
   -i "${vob_file}" \
   -i "${chapter_file}" \
-  -map_metadata 1 \
-  -map 0:0 \
+  -itsoffset ${offset} \
+  -i "${vob_file}" \
+  -map 2:v \
   -vf crop=${bottom_right}:${top_left} \
   -vcodec libx264 \
   ${tune} \
   ${deinterlace} \
   -preset veryslow \
   -map ${audio_track} \
-  -acodec copy \
   -crf ${crf} \
+  -acodec copy \
+  -map_metadata 1 \
   "${rip_directory}/${movie_title}.mkv"
 
 echo
