@@ -41,23 +41,20 @@ for i in $(seq 0 $(( ${#sub_title[@]} -1 )) ) ; do
 done
 )
 
-# Determine the framerate
-framerate=$(grep -E "\--vid" "${rip_directory}/metadata.txt" | fmt -w1 | grep fps | tr -d 'fps) ')
-
 # Pick the audio track
 grep --color=never -E "\--aid.*\--alang" "${rip_directory}/metadata.txt" | cut -d'=' -f2,3 | sed 's/ --alang=/. /'
 read -rp 'Enter the number of the desired audio track. ' aid
 audio_track=$(ffprobe "${vob_file}" |& grep -m${aid} Audio | tail -n1 | cut -d'#' -f2 | cut -d'[' -f1)
 
 # Check if the video needs to be deinterlaced
-while true ; do
-  read -rp 'Does the video need to be deinterlaced? [y/N/(v)iew video] ' ynv
-  case $ynv in
-    y|Y) deinterlace='-deinterlace' && break ;;
-    v|V) mpv "${vob_file}" ;;
-    *) break ;;
-  esac
-done
+#while true ; do
+#  read -rp 'Does the video need to be deinterlaced? [y/N/(v)iew video] ' ynv
+#  case $ynv in
+#    y|Y) deinterlace='-deinterlace' && break ;;
+#    v|V) mpv "${vob_file}" ;;
+#    *) break ;;
+#  esac
+#done
 
 # Determine the video cropping
 top_left='0:0'
@@ -84,7 +81,6 @@ done
 
 # Select the CRF
 # PTS
-# preset
 # animation?
 
 # Encode the movie
@@ -92,12 +88,15 @@ ffmpeg \
   -threads 0 \
   -i "${vob_file}" \
   -map 0:0 \
-  -r ${framerate} \
-  ${deinterlace} \
-  -vf crop=${top_left}:${bottom_right} \
+  -vf crop=${bottom_right}:${top_left} \
+  -c:v libx265 \
+  -preset veryfast \
+  -pix_fmt yuv444p10le \
   -map ${audio_track} \
   -acodec copy \
-  
+  -crf 20 \
+  -ss 60 -t 30 \
+  "${rip_directory}/${movie_title}.mkv"
 
 
 
