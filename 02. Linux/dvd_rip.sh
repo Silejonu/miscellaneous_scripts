@@ -11,7 +11,7 @@ done
 read -rp 'Movie title? ' movie_title
 rip_directory="$(xdg-user-dir VIDEOS)/rips/${movie_title}"
 vob_file="${rip_directory}/${movie_title}.vob"
-chapter_file="${rip_directory}/chapters.txt"
+chapters_file="${rip_directory}/chapters.txt"
 metadata_file="${rip_directory}/metadata.txt"
 mkdir -p "${rip_directory}"
 
@@ -34,18 +34,18 @@ if [[ $skip_dump != 'yes' ]] ; then
 
   # Dump chapters
   title_number=$(grep '\[dvdnav\] Selecting title' "${metadata_file}" | cut -d' ' -f4 | tr -d '.')
-  dvdxchap --title $(( $title_number + 1 )) /dev/sr0 > "${chapter_file}"
+  dvdxchap --title $(( $title_number + 1 )) /dev/sr0 > "${chapters_file}"
   # Convert chapters into a format readable by FFmpeg
-  for chapter in $(seq -f '%02g' $(cat "${chapter_file}" | sort -r | head -n1 | cut -d' ' -f2)) ; do
-    timestamp="$(grep "CHAPTER${chapter}=" "${chapter_file}" | cut -d'=' -f2)"
+  for chapter in $(seq -f '%02g' $(cat "${chapters_file}" | sort -r | head -n1 | cut -d' ' -f2)) ; do
+    timestamp="$(grep "CHAPTER${chapter}=" "${chapters_file}" | cut -d'=' -f2)"
     timestamp_ffmpeg=$(echo "${timestamp}" | awk -F[:.] '{ print ($1 * 3600000) + ($2 * 60000) + ($3 * 1000) + $4 }')
-    sed -i "s#${timestamp}#${timestamp_ffmpeg}#" "${chapter_file}"
-    sed -i "s#CHAPTER${chapter}=#\n[CHAPTER]\nTIMEBASE=1/1000\nSTART=#" "${chapter_file}"
-    sed -i "s#CHAPTER${chapter}NAME#END=\nTITLE#" "${chapter_file}"
+    sed -i "s#${timestamp}#${timestamp_ffmpeg}#" "${chapters_file}"
+    sed -i "s#CHAPTER${chapter}=#\n[CHAPTER]\nTIMEBASE=1/1000\nSTART=#" "${chapters_file}"
+    sed -i "s#CHAPTER${chapter}NAME#END=\nTITLE#" "${chapters_file}"
   done
   
   # Add remaining metadata
-  sed -i "1 s#^#;FFMETADATA1\nTITLE=${movie_title}#" "${chapter_file}"
+  sed -i "1 s#^#;FFMETADATA1\nTITLE=${movie_title}#" "${chapters_file}"
 
   eject /dev/sr0
 
@@ -176,7 +176,7 @@ The following command is about to be ran:
 ffmpeg \
 -threads 0 \
 -i "${vob_file}" \
--i "${chapter_file}" \
+-i "${chapters_file}" \
 -itsoffset ${offset} \
 -i "${vob_file}" \
 -map 2:v \
@@ -202,7 +202,7 @@ esac
 ffmpeg \
   -threads 0 \
   -i "${vob_file}" \
-  -i "${chapter_file}" \
+  -i "${chapters_file}" \
   -itsoffset ${offset} \
   -i "${vob_file}" \
   -map 2:v \
@@ -224,9 +224,9 @@ read -rp 'Clean up the source files? [Y/n] ' yesno
 case $yesno in
   [nN]|[nN][oO]) ;;
   *) rm "${rip_directory}/${movie_title}"_crf*.mkv
-     rm "${rip_directory}/${movie_title}.vob"
-     rm "${rip_directory}/chapters.txt"
      rm "${rip_directory}/cropping_values.txt"
-     rm "${rip_directory}/metadata.txt"
+     rm "${chapters_file}"
+     rm "${metadata_file}"
+     rm "${vob_file}"
      ;;
 esac
