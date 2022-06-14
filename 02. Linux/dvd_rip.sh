@@ -12,6 +12,7 @@ read -rp 'Movie title? ' movie_title
 rip_directory="$(xdg-user-dir VIDEOS)/rips/${movie_title}"
 vob_file="${rip_directory}/${movie_title}.vob"
 chapter_file="${rip_directory}/chapters.txt"
+metadata_file="${rip_directory}/metadata.txt"
 mkdir -p "${rip_directory}"
 
 # Skip if the .vob file already exists
@@ -24,15 +25,15 @@ if [[ -f ${vob_file} ]] ; then
   esac
 fi
 
-if [[ $skip_dump == 'no' ]] ; then
+if [[ $skip_dump != 'yes' ]] ; then
   # Extract metadata
-  mpv dvd://longest -frames 0 > "${rip_directory}/metadata.txt"
+  mpv dvd://longest -frames 0 > "${metadata_file}"
 
   # Dump the movie to a .vob file
   mpv dvd://longest --stream-dump="${vob_file}"
 
   # Dump chapters
-  title_number=$(grep '\[dvdnav\] Selecting title' "${rip_directory}/metadata.txt" | cut -d' ' -f4 | tr -d '.')
+  title_number=$(grep '\[dvdnav\] Selecting title' "${metadata_file}" | cut -d' ' -f4 | tr -d '.')
   dvdxchap --title $(( $title_number + 1 )) /dev/sr0 > "${chapter_file}"
   # Convert chapters into a format readable by FFmpeg
   for chapter in $(seq -f '%02g' $(cat "${chapter_file}" | sort -r | head -n1 | cut -d' ' -f2)) ; do
@@ -49,9 +50,9 @@ if [[ $skip_dump == 'no' ]] ; then
   eject /dev/sr0
 
   # Store subtitles stream IDs
-  sub_id=($(grep -E "\--sid.*\--slang" "${rip_directory}/metadata.txt" | cut -d'=' -f2 | cut -d' ' -f1))
+  sub_id=($(grep -E "\--sid.*\--slang" "${metadata_file}" | cut -d'=' -f2 | cut -d' ' -f1))
   # Store subtitles languages
-  sub_lang=($(grep -E "\--sid.*\--slang" "${rip_directory}/metadata.txt" | cut -d'=' -f3 | cut -d' ' -f1))
+  sub_lang=($(grep -E "\--sid.*\--slang" "${metadata_file}" | cut -d'=' -f3 | cut -d' ' -f1))
   # Dump subtitles
   (
   cd "${rip_directory}"
@@ -71,7 +72,7 @@ fi
 
 # Pick the audio track
 echo
-grep --color=never -E "\--aid.*\--alang" "${rip_directory}/metadata.txt" | cut -d'=' -f2,3 | sed 's/ --alang=/. /'
+grep --color=never -E "\--aid.*\--alang" "${metadata_file}" | cut -d'=' -f2,3 | sed 's/ --alang=/. /'
 #ffprobe "${vob_file}" |& grep Audio | cut -d':' -f4 | cat -n
 read -rp 'Enter the number of the desired audio track: ' aid
 audio_track=$(ffprobe "${vob_file}" |& grep -m${aid} Audio | tail -n1 | cut -d'#' -f2 | cut -d'[' -f1)
@@ -163,13 +164,41 @@ if [[ $crf_test == 'yes' ]] ; then
   done
   
   echo "All CRF test files have been generated in ${rip_directory}"
-  mpv "${rip_directory}/${movie_title}_crf*.mkv"
+  mpv "${rip_directory}/${movie_title}"_crf*.mkv
 
 fi
 
 read -rp 'Enter the desired CRF value (the highest number with an acceptable quality) for the final rip: ' crf
 
-# Rappel commande
+# Print the final command and prompt for confirmation
+cat << EOF
+The following command is about to be ran:
+
+ffmpeg \
+-threads 0 \
+-i "${vob_file}" \
+-i "${chapter_file}" \
+-itsoffset ${offset} \
+-i "${vob_file}" \
+-map 2:v \
+-vf crop=${bottom_right}:${top_left} \
+-vcodec libx264 \
+${tune} \
+${deinterlace} \
+-preset veryslow \
+-map ${audio_track} \
+-crf ${crf} \
+-acodec copy \
+-map_metadata 1 \
+"${rip_directory}/${movie_title}.mkv"
+
+EOF
+
+read -rp 'Do you want to proceed ? [Y/n] ' yesno
+case $yesno in
+  [nN]|[nN][oO]) exit 0 ;;
+  *) ;;
+esac
 
 # Encode the movie
 ffmpeg \
