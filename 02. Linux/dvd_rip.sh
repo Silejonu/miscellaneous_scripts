@@ -80,7 +80,7 @@ audio_track=$(ffprobe "${vob_file}" |& grep -m${aid} Audio | tail -n1 | cut -d'#
 # Find the video start delay
 video_start_delay=$(ffprobe -select_streams v:0 -show_streams -i "${vob_file}" |& grep start_time | cut -d'=' -f2)
 # Find the audio start delay
-audio_start_delay=$(ffprobe -select_streams a:${aid} -show_streams -i "${vob_file}" |& grep start_time | cut -d'=' -f2)
+audio_start_delay=$(ffprobe -select_streams a:$(( ${aid} - 1 )) -show_streams -i "${vob_file}" |& grep start_time | cut -d'=' -f2)
 offset=$(awk "BEGIN { print ${video_start_delay} - ${audio_start_delay} }")
 
 # Determine the video cropping
@@ -130,7 +130,7 @@ esac
 while true ; do
   read -rp 'Does the video need to be deinterlaced? [y/N/(v)iew video] ' ynv
   case $ynv in
-    [yY]) deinterlace='-vf yadif=1' && break ;;
+    [yY]) deinterlace=',yadif=1' && break ;;
     [vV]) mpv "${vob_file}" ;;
     *) break ;;
   esac
@@ -153,10 +153,9 @@ if [[ $crf_test == 'yes' ]] ; then
       -threads 0 \
       -i "${vob_file}" \
       -map 0:v \
-      -vf crop=${bottom_right}:${top_left} \
+      -vf crop=${bottom_right}:${top_left}${deinterlace} \
       -vcodec libx264 \
       ${tune} \
-      ${deinterlace} \
       -preset ultrafast \
       -crf ${test_crf} \
       -ss ${start_time} -t 60 \
@@ -181,10 +180,9 @@ ffmpeg \
 -itsoffset ${offset} \
 -i "${vob_file}" \
 -map 2:v \
--vf crop=${bottom_right}:${top_left} \
+-vf crop=${bottom_right}:${top_left}${deinterlace} \
 -vcodec libx264 \
 ${tune} \
-${deinterlace} \
 -preset veryslow \
 -map ${audio_track} \
 -crf ${crf} \
@@ -208,10 +206,9 @@ ffmpeg \
   -itsoffset ${offset} \
   -i "${vob_file}" \
   -map 2:v \
-  -vf crop=${bottom_right}:${top_left} \
+  -vf crop=${bottom_right}:${top_left}${deinterlace} \
   -vcodec libx264 \
   ${tune} \
-  ${deinterlace} \
   -preset veryslow \
   -map ${audio_track} \
   -crf ${crf} \
