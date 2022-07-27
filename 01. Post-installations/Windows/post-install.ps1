@@ -7,7 +7,8 @@ if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
  }
 }
 
-
+# Update Microsoft Store apps
+Get-CimInstance -Namespace "Root\cimv2\mdm\dmmap" -ClassName "MDM_EnterpriseModernAppManagement_AppManagement01" | Invoke-CimMethod -MethodName UpdateScanMethod
 
 winget install Microsoft.WindowsTerminal
 winget install Microsoft.PowerShell
