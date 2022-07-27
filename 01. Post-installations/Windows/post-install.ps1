@@ -19,9 +19,11 @@ winget install VideoLAN.VLC
 winget install 7zip.7zip
 
 # Uninstall some useless programs
-winget uninstall Microsoft.Edge
+winget uninstall Disney.37853FC22B2CE_6rarf9sa4v8jt
 winget uninstall Microsoft.BingNews_8wekyb3d8bbwe
 winget uninstall Microsoft.BingWeather_8wekyb3d8bbwe
+winget uninstall Microsoft.Edge
+winget uninstall Microsoft.549981C3F5F10_8wekyb3d8bbwe
 winget uninstall Microsoft.GamingApp_8wekyb3d8bbwe
 winget uninstall Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe
 winget uninstall Microsoft.MicrosoftSolitaireCollection_8wekyb3d8bbwe
