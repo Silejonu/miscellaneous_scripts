@@ -10,12 +10,33 @@ if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 # Update Microsoft Store apps
 Get-CimInstance -Namespace "Root\cimv2\mdm\dmmap" -ClassName "MDM_EnterpriseModernAppManagement_AppManagement01" | Invoke-CimMethod -MethodName UpdateScanMethod
 
+# Install some useful programs
 winget install Microsoft.WindowsTerminal
 winget install Microsoft.PowerShell
 winget install Mozilla.Firefox
 winget install TheDocumentFoundation.LibreOffice
 winget install VideoLAN.VLC
 winget install 7zip.7zip
+
+# Uninstall some useless programs
+winget uninstall Microsoft.Edge
+winget uninstall Microsoft.BingNews_8wekyb3d8bbwe
+winget uninstall Microsoft.BingWeather_8wekyb3d8bbwe
+winget uninstall Microsoft.GamingApp_8wekyb3d8bbwe
+winget uninstall Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe
+winget uninstall Microsoft.MicrosoftSolitaireCollection_8wekyb3d8bbwe
+winget uninstall Microsoft.OneDriveSync_8wekyb3d8bbwe
+winget uninstall Microsoft.People_8wekyb3d8bbwe
+winget uninstall Microsoft.WindowsFeedbackHub_8wekyb3d8bbwe
+winget uninstall Microsoft.Xbox.TCUI_8wekyb3d8bbwe
+winget uninstall Microsoft.XboxGameOverlay_8wekyb3d8bbwe
+winget uninstall Microsoft.XboxGamingOverlay_8wekyb3d8bbwe
+winget uninstall Microsoft.XboxIdentityProvider_8wekyb3d8bbwe
+winget uninstall Microsoft.XboxSpeechToTextOverlay_8wekyb3d8bbwe
+winget uninstall Microsoft.ZuneMusic_8wekyb3d8bbwe
+winget uninstall Microsoft.ZuneVideo_8wekyb3d8bbwe
+winget uninstall Microsoft.OneDrive
+winget uninstall SpotifyAB.SpotifyMusic_zpdnekdrzrea0
 
 #regedit /s .\favourites.reg
 reg import .\favourites.reg
