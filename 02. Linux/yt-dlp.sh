@@ -6,4 +6,5 @@ yt-dlp \
   --merge-output-format mkv \
   --download-archive ./.archive \
   --batch-file ./list \
+  --concurrent-fragments 10 \
   --output './%(title).240s.mkv'
