@@ -1,11 +1,24 @@
-# Self-elevate the script if required
-if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator')) {
-    if ([int](Get-CimInstance -Class Win32_OperatingSystem | Select-Object -ExpandProperty BuildNumber) -ge 6000) {
-        $Command = "-File `"" + $MyInvocation.MyCommand.Path + "`" " + $MyInvocation.UnboundArguments
-        Start-Process -FilePath PowerShell.exe -Verb RunAs -ArgumentList $Command
-        Exit
- }
+# Run the script with administrator privileges
+##################################################
+param([switch]$Elevated)
+
+function Test-Admin {
+    $currentUser = New-Object Security.Principal.WindowsPrincipal $([Security.Principal.WindowsIdentity]::GetCurrent())
+    $currentUser.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
 }
+
+if ((Test-Admin) -eq $false)  {
+    if ($elevated) {
+        # tried to elevate, did not work, aborting
+    } else {
+        Start-Process powershell.exe -Verb RunAs -ArgumentList ('-noprofile -noexit -file "{0}" -elevated' -f ($myinvocation.MyCommand.Definition))
+    }
+    exit
+}
+
+'running with full privileges'
+
+##################################################
 
 # Update Microsoft Store apps
 Get-CimInstance -Namespace "Root\cimv2\mdm\dmmap" -ClassName "MDM_EnterpriseModernAppManagement_AppManagement01" | Invoke-CimMethod -MethodName UpdateScanMethod
@@ -22,7 +35,6 @@ winget install 7zip.7zip
 winget uninstall Disney.37853FC22B2CE_6rarf9sa4v8jt
 winget uninstall Microsoft.BingNews_8wekyb3d8bbwe
 winget uninstall Microsoft.BingWeather_8wekyb3d8bbwe
-winget uninstall Microsoft.Edge
 # Cortana
 winget uninstall Microsoft.549981C3F5F10_8wekyb3d8bbwe
 winget uninstall Microsoft.GamingApp_8wekyb3d8bbwe
@@ -41,9 +53,13 @@ winget uninstall Microsoft.ZuneVideo_8wekyb3d8bbwe
 winget uninstall Microsoft.OneDrive
 winget uninstall SpotifyAB.SpotifyMusic_zpdnekdrzrea0
 
-#regedit /s .\favourites.reg
-reg import .\favourites.reg
-reg import .\show_file_extensions.reg
+# Show file extensions
+# http://superuser.com/questions/666891/script-to-set-hide-file-extensions
+Push-Location
+Set-Location HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
+Set-ItemProperty . HideFileExt "0"
+Pop-Location
+Stop-Process -processName: Explorer -force # This will restart the Explorer service to make this work.
 
 # Set default browser
 
