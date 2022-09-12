@@ -15,7 +15,6 @@ if ((Test-Admin) -eq $false)  {
     }
     exit
 }
-
 ##################################################
 
 # Update Microsoft Store apps
