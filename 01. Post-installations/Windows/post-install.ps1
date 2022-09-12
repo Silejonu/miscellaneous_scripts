@@ -16,8 +16,6 @@ if ((Test-Admin) -eq $false)  {
     exit
 }
 
-'running with full privileges'
-
 ##################################################
 
 # Update Microsoft Store apps
@@ -35,8 +33,6 @@ winget install 7zip.7zip
 winget uninstall Disney.37853FC22B2CE_6rarf9sa4v8jt
 winget uninstall Microsoft.BingNews_8wekyb3d8bbwe
 winget uninstall Microsoft.BingWeather_8wekyb3d8bbwe
-# Cortana
-winget uninstall Microsoft.549981C3F5F10_8wekyb3d8bbwe
 winget uninstall Microsoft.GamingApp_8wekyb3d8bbwe
 winget uninstall Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe
 winget uninstall Microsoft.MicrosoftSolitaireCollection_8wekyb3d8bbwe
@@ -52,6 +48,8 @@ winget uninstall Microsoft.ZuneMusic_8wekyb3d8bbwe
 winget uninstall Microsoft.ZuneVideo_8wekyb3d8bbwe
 winget uninstall Microsoft.OneDrive
 winget uninstall SpotifyAB.SpotifyMusic_zpdnekdrzrea0
+# Uninstall Cortana
+winget uninstall Microsoft.549981C3F5F10_8wekyb3d8bbwe
 
 # Show file extensions
 # http://superuser.com/questions/666891/script-to-set-hide-file-extensions
@@ -61,6 +59,7 @@ Set-ItemProperty . HideFileExt "0"
 Pop-Location
 Stop-Process -processName: Explorer -force # This will restart the Explorer service to make this work.
 
-# Set default browser
+# TODO: Set default browser
 
-#Set-ExecutionPolicy Restricted
+# Reset Execution Policy
+Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope CurrentUser
