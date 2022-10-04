@@ -37,6 +37,7 @@ winget uninstall Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe
 winget uninstall Microsoft.MicrosoftSolitaireCollection_8wekyb3d8bbwe
 winget uninstall Microsoft.OneDriveSync_8wekyb3d8bbwe
 winget uninstall Microsoft.People_8wekyb3d8bbwe
+winget uninstall "WildTangent wildgames Master Uninstall"
 winget uninstall Microsoft.WindowsFeedbackHub_8wekyb3d8bbwe
 winget uninstall Microsoft.Xbox.TCUI_8wekyb3d8bbwe
 winget uninstall Microsoft.XboxGameOverlay_8wekyb3d8bbwe
