@@ -75,12 +75,12 @@ echo
 grep --color=never -E "\--aid.*\--alang" "${metadata_file}" | cut -d'=' -f2,3 | sed 's/ --alang=/. /'
 #ffprobe "${vob_file}" |& grep Audio | cut -d':' -f4 | cat -n
 read -rp 'Enter the number of the desired audio track: ' aid
-audio_track=$(ffprobe "${vob_file}" |& grep -m${aid} Audio | tail -n1 | cut -d'#' -f2 | cut -d'[' -f1)
+audio_track="a:$(( $aid - 1 ))"
 
 # Find the video start delay
 video_start_delay=$(ffprobe -select_streams v:0 -show_streams -i "${vob_file}" |& grep start_time | cut -d'=' -f2)
 # Find the audio start delay
-audio_start_delay=$(ffprobe -select_streams a:$(( ${aid} - 1 )) -show_streams -i "${vob_file}" |& grep start_time | cut -d'=' -f2)
+audio_start_delay=$(ffprobe -select_streams ${audio_track} -show_streams -i "${vob_file}" |& grep start_time | cut -d'=' -f2)
 offset=$(awk "BEGIN { print ${video_start_delay} - ${audio_start_delay} }")
 
 # Determine the video cropping
